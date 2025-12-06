@@ -1,0 +1,32 @@
+[project]
+name = "memory"
+version = "0.1.0"
+description = "Memory - Document ingestion engine. Chunks and indexes knowledge sources into Qdrant to power Charlie and RIA's contextual retrieval."
+authors = [
+    {name = "joshiayush"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4"
+dependencies = [
+    "qdrant-client (>=1.16.1,<2.0.0)",
+    "fastembed (>=0.7.4,<0.8.0)",
+    "langchain (>=1.1.2,<2.0.0)",
+    "langchain-core (>=1.1.1,<2.0.0)",
+    "langchain-google-vertexai (>=3.1.1,<4.0.0)",
+    "nltk (>=3.9.0,<4.0.0)",
+    "pypdf (>=5.1.0,<6.0.0)",
+    "tidylog (>=0.1.1,<0.2.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "black (>=25.11.0,<26.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
