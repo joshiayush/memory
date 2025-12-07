@@ -1,12 +1,22 @@
 [project]
-name = "memory"
+name = "livekit-memory"
 version = "0.1.0"
-description = "Memory - Document ingestion engine. Chunks and indexes knowledge sources into Qdrant to power Charlie and RIA's contextual retrieval."
+description = "Memory - Document ingestion engine. Chunks and indexes knowledge sources into Qdrant to power LiveKit agent's contextual retrieval."
 authors = [
     {name = "joshiayush"}
 ]
 readme = "README.md"
 requires-python = ">=3.13,<4"
+license = {text = "Apache-2.0"}
+keywords = ["livekit", "rag", "memory", "qdrant", "embeddings", "retrieval"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "qdrant-client (>=1.16.1,<2.0.0)",
     "fastembed (>=0.7.4,<0.8.0)",
@@ -18,6 +28,13 @@ dependencies = [
     "tidylog (>=0.1.1,<0.2.0)",
 ]
 
+[project.urls]
+Homepage = "https://github.com/joshiayush/memory"
+Repository = "https://github.com/joshiayush/memory"
+Issues = "https://github.com/joshiayush/memory/issues"
+
+[project.scripts]
+livekit-memory = "memory.__main__:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -25,8 +42,10 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
-    "black (>=25.11.0,<26.0.0)"
+    "black (>=25.11.0,<26.0.0)",
+    "build (>=1.3.0,<2.0.0)",
+    "twine (>=6.2.0,<7.0.0)"
 ]
 
 [tool.poetry]
-package-mode = false
+packages = [{include = "livekit_memory", from = "src"}]

@@ -2,3 +2,6 @@ poetry.lock
 
 # fastembed cache dir
 ~
+
+# build
+dist
