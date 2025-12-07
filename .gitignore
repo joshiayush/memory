@@ -1,4 +1,8 @@
+# poetry stuff
 poetry.lock
+
+# python cache dir
+__pycache__
 
 # fastembed cache dir
 ~
