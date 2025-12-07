@@ -299,8 +299,8 @@ class FastRAGPipeline:
         searches for similar documents, and returns results with latency metrics.
 
         Performance Target:
-            Total latency should be <200ms for voice agent applications.
-            Typical breakdown: ~15ms embedding + ~50-150ms search.
+            Total latency should be <50ms for voice agent applications.
+            Typical breakdown: ~3ms embedding + ~15-30ms search.
 
         Args:
             query: The search query text.
