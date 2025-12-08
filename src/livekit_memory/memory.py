@@ -34,6 +34,7 @@ from qdrant_client import QdrantClient, models
 from tidylog import get_logger
 
 from .chunker.agentic.chunker import AgenticChunker
+from .chunker.recursive.chunker import RecursiveChunker
 from .content import discover_files, extract_propositions, load_document
 from .content.types import DocType
 from .models import QdrantConfig, RAGConfig, RetrievalResult
@@ -219,17 +220,21 @@ class FastRAGPipeline:
         *,
         type: DocType,
         recursive: bool = False,
+        use_agentic_chunker: bool = False,
     ) -> int:
         """Load, chunk, and ingest documents from disk.
 
         This method discovers files at the given path, loads their content,
-        extracts propositions, semantically chunks them using the AgenticChunker,
-        and ingests the resulting chunks into the vector database.
+        chunks them, and ingests the resulting chunks into the vector database.
+
+        By default, uses RecursiveChunker for fast character-based splitting.
+        Set use_agentic_chunker=True for LLM-powered semantic chunking (slower).
 
         Args:
             path: Path to a file or directory containing documents.
             type: The document type to load (markdown, pdf, or text).
             recursive: If True and path is a directory, search subdirectories.
+            use_agentic_chunker: If True, use LLM-powered semantic chunking.
 
         Returns:
             Number of chunks successfully ingested.
@@ -258,25 +263,37 @@ class FastRAGPipeline:
         )
 
         # Load content from all files
-        all_propositions: List[str] = []
+        all_content: List[str] = []
         for file_path in files:
             content = await load_document(file_path, type)
             if content.strip():
+                all_content.append(content)
+
+        if not all_content:
+            raise ValueError("No content extracted from documents")
+
+        # Chunk documents
+        if use_agentic_chunker:
+            # LLM-powered semantic chunking (slower but more coherent)
+            all_propositions: List[str] = []
+            for content in all_content:
                 propositions = extract_propositions(content)
                 all_propositions.extend(propositions)
 
-        if not all_propositions:
-            raise ValueError("No content extracted from documents")
+            logger.info(
+                "extracted propositions",
+                extra={"count": len(all_propositions)},
+            )
 
-        logger.info(
-            "extracted propositions",
-            extra={"count": len(all_propositions)},
-        )
-
-        # Chunk propositions semantically
-        chunker = AgenticChunker(generate_new_metadata=True)
-        chunker.add_propositions(all_propositions)
-        documents = chunker.to_documents()
+            chunker = AgenticChunker(generate_new_metadata=True)
+            chunker.add_propositions(all_propositions)
+            documents = chunker.to_documents()
+        else:
+            # Fast recursive character splitting (default)
+            chunker = RecursiveChunker()
+            for content in all_content:
+                chunker.add_text(content)
+            documents = chunker.to_documents()
 
         logger.info(
             "chunking complete",

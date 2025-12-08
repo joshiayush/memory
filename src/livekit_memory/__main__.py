@@ -91,6 +91,11 @@ def create_parser() -> argparse.ArgumentParser:
         default="~/.cache/fastembed",
         help="Directory to cache embedding models (default: ~/.cache/fastembed)",
     )
+    ingest_parser.add_argument(
+        "--agentic",
+        action="store_true",
+        help="Use LLM-powered agentic chunking (slower but more semantic)",
+    )
 
     # query subcommand
     query_parser = subparsers.add_parser(
@@ -258,6 +263,7 @@ async def main() -> None:
             args.path,
             type=args.type,
             recursive=args.recursive,
+            use_agentic_chunker=args.agentic,
         )
         print(f"Ingested {count} chunks into collection '{args.collection}'")
 
