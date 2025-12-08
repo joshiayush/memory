@@ -1,6 +1,6 @@
 [project]
 name = "livekit-memory"
-version = "0.1.1"
+version = "0.1.2"
 description = "Memory - Document ingestion engine. Chunks and indexes knowledge sources into Qdrant to power LiveKit agent's contextual retrieval."
 authors = [
     {name = "joshiayush"}

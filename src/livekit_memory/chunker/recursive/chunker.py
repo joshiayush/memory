@@ -20,8 +20,6 @@ class RecursiveChunker:
         ".py": Language.PYTHON,
         ".js": Language.JS,
         ".ts": Language.TS,
-        ".tsx": Language.TSX,
-        ".jsx": Language.JSX,
         ".go": Language.GO,
         ".java": Language.JAVA,
         ".kt": Language.KOTLIN,
