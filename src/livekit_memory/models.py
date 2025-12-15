@@ -36,6 +36,7 @@ class EmbeddingConfig:
         model_name: HuggingFace model identifier. FastEmbed downloads and caches
             the ONNX-optimized version automatically.
             Recommended models:
+                - "sentence-transformers/all-MiniLM-L6-v2" (384 dims, default)
                 - "BAAI/bge-small-en-v1.5" (384 dims, fastest, good quality)
                 - "BAAI/bge-base-en-v1.5" (768 dims, balanced)
                 - "BAAI/bge-large-en-v1.5" (1024 dims, highest quality)
@@ -43,11 +44,11 @@ class EmbeddingConfig:
             None uses all available cores (recommended for dedicated servers).
             Set to a specific number to limit CPU usage in shared environments.
         cache_dir: Directory to cache downloaded models. If None, uses the
-            default ~/.cache/fastembed directory. Set this to persist models
+            default .cache/fastembed directory. Set this to persist models
             across runs and avoid re-downloading.
     """
 
-    model_name: str = "BAAI/bge-small-en-v1.5"
+    model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     threads: Optional[int] = None
     cache_dir: Optional[str] = None
 

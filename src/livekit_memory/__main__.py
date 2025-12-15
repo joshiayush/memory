@@ -88,13 +88,18 @@ def create_parser() -> argparse.ArgumentParser:
     )
     ingest_parser.add_argument(
         "--cache-dir",
-        default="~/.cache/fastembed",
-        help="Directory to cache embedding models (default: ~/.cache/fastembed)",
+        default=".cache/fastembed",
+        help="Directory to cache embedding models (default: .cache/fastembed)",
     )
     ingest_parser.add_argument(
         "--agentic",
         action="store_true",
         help="Use LLM-powered agentic chunking (slower but more semantic)",
+    )
+    ingest_parser.add_argument(
+        "--model",
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
     )
 
     # query subcommand
@@ -128,8 +133,13 @@ def create_parser() -> argparse.ArgumentParser:
     )
     query_parser.add_argument(
         "--cache-dir",
-        default="~/.cache/fastembed",
-        help="Directory to cache embedding models (default: ~/.cache/fastembed)",
+        default=".cache/fastembed",
+        help="Directory to cache embedding models (default: .cache/fastembed)",
+    )
+    query_parser.add_argument(
+        "--model",
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
     )
 
     # migrate subcommand
@@ -251,7 +261,8 @@ async def main() -> None:
             collection_name=args.collection,
         ),
         embedding=EmbeddingConfig(
-            cache_dir=None and args.cache_dir,
+            model_name=args.model,
+            cache_dir=args.cache_dir,
         ),
     )
 

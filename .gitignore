@@ -5,7 +5,7 @@ poetry.lock
 __pycache__
 
 # fastembed cache dir
-~
+.cache
 
 # build
 dist
