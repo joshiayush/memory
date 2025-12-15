@@ -46,11 +46,16 @@ class EmbeddingConfig:
         cache_dir: Directory to cache downloaded models. If None, uses the
             default .cache/fastembed directory. Set this to persist models
             across runs and avoid re-downloading.
+        embedding_service_url: Optional URL of remote FastEmbed service.
+            If set, embeddings are generated via HTTP instead of loading the
+            model locally. This reduces per-job memory from ~625MB to ~200MB.
+            Example: "http://localhost:8000"
     """
 
     model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     threads: Optional[int] = None
     cache_dir: Optional[str] = None
+    embedding_service_url: Optional[str] = None
 
 
 @dataclass

@@ -101,6 +101,10 @@ def create_parser() -> argparse.ArgumentParser:
         default="sentence-transformers/all-MiniLM-L6-v2",
         help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
     )
+    ingest_parser.add_argument(
+        "--embedding-service-url",
+        help="URL of remote embedding service (e.g., http://localhost:8000)",
+    )
 
     # query subcommand
     query_parser = subparsers.add_parser(
@@ -140,6 +144,10 @@ def create_parser() -> argparse.ArgumentParser:
         "--model",
         default="sentence-transformers/all-MiniLM-L6-v2",
         help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
+    )
+    query_parser.add_argument(
+        "--embedding-service-url",
+        help="URL of remote embedding service (e.g., http://localhost:8000)",
     )
 
     # migrate subcommand
@@ -263,6 +271,7 @@ async def main() -> None:
         embedding=EmbeddingConfig(
             model_name=args.model,
             cache_dir=args.cache_dir,
+            embedding_service_url=getattr(args, "embedding_service_url", None),
         ),
     )
 

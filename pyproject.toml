@@ -1,6 +1,6 @@
 [project]
 name = "livekit-memory"
-version = "0.1.4"
+version = "0.2.4"
 description = "Memory - Document ingestion engine. Chunks and indexes knowledge sources into Qdrant to power LiveKit agent's contextual retrieval."
 authors = [
     {name = "joshiayush"}
@@ -27,6 +27,7 @@ dependencies = [
     "nltk (>=3.9.0,<4.0.0)",
     "pypdf (>=5.1.0,<6.0.0)",
     "tidylog (>=0.1.1,<0.2.0)",
+    "httpx (>=0.27.0,<1.0.0)",
 ]
 
 [project.urls]

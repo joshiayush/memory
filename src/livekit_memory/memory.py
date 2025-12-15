@@ -26,8 +26,9 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import uuid
-from typing import List
+from typing import List, Optional, Union
 
+import httpx
 from fastembed import TextEmbedding
 from fastembed.common.types import NumpyArray
 from qdrant_client import QdrantClient, models
@@ -79,8 +80,8 @@ class FastRAGPipeline:
     def __init__(self, config: RAGConfig) -> None:
         """Initialize the RAG pipeline with the given configuration.
 
-        This constructor pre-loads the embedding model, which may take a few seconds
-        on first run (model download) but ensures fast inference during operation.
+        This constructor pre-loads the embedding model (unless using remote service),
+        which may take a few seconds on first run but ensures fast inference.
 
         Args:
             config: RAG pipeline configuration containing Qdrant and embedding settings.
@@ -95,14 +96,27 @@ class FastRAGPipeline:
             api_key=config.qdrant.api_key,
         )
 
-        # Pre-load embedding model to avoid cold-start latency during retrieval
-        # FastEmbed uses ONNX Runtime for optimized CPU inference
-        # cache_dir ensures models are persisted and not re-downloaded
-        self.embedding_model = TextEmbedding(
-            model_name=config.embedding.model_name,
-            threads=config.embedding.threads,
-            cache_dir=config.embedding.cache_dir,
-        )
+        # Use remote embedding service if URL is provided (reduces memory ~425MB)
+        # Otherwise, pre-load local embedding model
+        self._embedding_service_url = config.embedding.embedding_service_url
+        self._http_client: Optional[httpx.Client] = None
+        self.embedding_model: Optional[TextEmbedding] = None
+
+        if self._embedding_service_url:
+            logger.info(
+                "using remote embedding service",
+                extra={"url": self._embedding_service_url},
+            )
+            self._http_client = httpx.Client(timeout=30.0)
+        else:
+            # Pre-load embedding model to avoid cold-start latency during retrieval
+            # FastEmbed uses ONNX Runtime for optimized CPU inference
+            # cache_dir ensures models are persisted and not re-downloaded
+            self.embedding_model = TextEmbedding(
+                model_name=config.embedding.model_name,
+                threads=config.embedding.threads,
+                cache_dir=config.embedding.cache_dir,
+            )
 
     async def initialize_collection(self) -> bool:
         """Create the vector collection if it doesn't exist.
@@ -148,20 +162,32 @@ class FastRAGPipeline:
 
         return True
 
-    def _embed_sync(self, texts: List[str]) -> List[NumpyArray]:
+    def _embed_sync(self, texts: List[str]) -> Union[List[NumpyArray], List[List[float]]]:
         """Generate embeddings synchronously (internal helper).
 
         This method is called via asyncio.to_thread() to prevent blocking
         the event loop during CPU-intensive embedding computation.
 
+        Uses remote embedding service if configured, otherwise local model.
+
         Args:
             texts: List of text strings to embed.
 
         Returns:
-            List of embedding vectors (numpy arrays).
+            List of embedding vectors (numpy arrays for local, lists for remote).
         """
-        # FastEmbed.embed() returns a generator, consume it immediately
-        return list(self.embedding_model.embed(texts))
+        if self._embedding_service_url and self._http_client:
+            # Remote embedding via HTTP
+            response = self._http_client.post(
+                f"{self._embedding_service_url}/embed",
+                json={"texts": texts, "model": self.config.embedding.model_name},
+            )
+            response.raise_for_status()
+            return response.json()["embeddings"]
+        else:
+            # Local embedding with FastEmbed
+            # FastEmbed.embed() returns a generator, consume it immediately
+            return list(self.embedding_model.embed(texts))
 
     async def ingest_documents(
         self,
@@ -196,10 +222,11 @@ class FastRAGPipeline:
         embeddings = await asyncio.to_thread(self._embed_sync, documents)
 
         # Prepare points for Qdrant upsert
+        # Handle both numpy arrays (local) and lists (remote)
         points = [
             models.PointStruct(
                 id=str(uuid.uuid4()),
-                vector=embedding.tolist(),
+                vector=embedding.tolist() if hasattr(embedding, "tolist") else embedding,
                 payload={"text": document},
             )
             for document, embedding in zip(documents, embeddings)
@@ -339,16 +366,18 @@ class FastRAGPipeline:
         if not query.strip():
             raise ValueError("Query cannot be empty")
 
-        # Embed the query (CPU-bound)
+        # Embed the query (CPU-bound or HTTP for remote)
         # Must run in thread to avoid blocking WebSocket heartbeat in voice agents
         query_embeddings = await asyncio.to_thread(self._embed_sync, [query])
         query_vector = query_embeddings[0]
+        # Handle both numpy arrays (local) and lists (remote)
+        query_vector_list = query_vector.tolist() if hasattr(query_vector, "tolist") else query_vector
 
         # Search for similar documents (IO-bound)
         search_result = await asyncio.to_thread(
             self.client.query_points,
             collection_name=self.config.qdrant.collection_name,
-            query=query_vector.tolist(),
+            query=query_vector_list,
             limit=limit,
             with_vectors=False,  # Don't return vectors to reduce payload size
         )
