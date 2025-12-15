@@ -34,7 +34,6 @@ from fastembed.common.types import NumpyArray
 from qdrant_client import QdrantClient, models
 from tidylog import get_logger
 
-from .chunker.agentic.chunker import AgenticChunker
 from .chunker.recursive.chunker import RecursiveChunker
 from .content import discover_files, extract_propositions, load_document
 from .content.types import DocType
@@ -301,6 +300,8 @@ class FastRAGPipeline:
 
         # Chunk documents
         if use_agentic_chunker:
+            from .chunker.agentic.chunker import AgenticChunker
+
             # LLM-powered semantic chunking (slower but more coherent)
             all_propositions: List[str] = []
             for content in all_content:
