@@ -36,10 +36,10 @@ class EmbeddingConfig:
         model_name: HuggingFace model identifier. FastEmbed downloads and caches
             the ONNX-optimized version automatically.
             Recommended models:
-                - "sentence-transformers/all-MiniLM-L6-v2" (384 dims, default)
-                - "BAAI/bge-small-en-v1.5" (384 dims, fastest, good quality)
+                - "BAAI/bge-small-en-v1.5" (384 dims, default, fastest, good quality)
                 - "BAAI/bge-base-en-v1.5" (768 dims, balanced)
                 - "BAAI/bge-large-en-v1.5" (1024 dims, highest quality)
+                - "sentence-transformers/all-MiniLM-L6-v2" (384 dims)
         threads: Number of CPU threads for ONNX Runtime inference.
             None uses all available cores (recommended for dedicated servers).
             Set to a specific number to limit CPU usage in shared environments.
@@ -52,7 +52,7 @@ class EmbeddingConfig:
             Example: "http://localhost:8000"
     """
 
-    model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    model_name: str = "BAAI/bge-small-en-v1.5"
     threads: Optional[int] = None
     cache_dir: Optional[str] = None
     embedding_service_url: Optional[str] = None

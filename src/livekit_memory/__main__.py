@@ -98,8 +98,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
     ingest_parser.add_argument(
         "--model",
-        default="sentence-transformers/all-MiniLM-L6-v2",
-        help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
+        default="BAAI/bge-small-en-v1.5",
+        help="Embedding model name (default: BAAI/bge-small-en-v1.5)",
     )
     ingest_parser.add_argument(
         "--embedding-service-url",
@@ -142,8 +142,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
     query_parser.add_argument(
         "--model",
-        default="sentence-transformers/all-MiniLM-L6-v2",
-        help="Embedding model name (default: sentence-transformers/all-MiniLM-L6-v2)",
+        default="BAAI/bge-small-en-v1.5",
+        help="Embedding model name (default: BAAI/bge-small-en-v1.5)",
     )
     query_parser.add_argument(
         "--embedding-service-url",
