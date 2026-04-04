@@ -9,3 +9,6 @@ __pycache__
 
 # build
 dist
+
+# uv env
+.venv
