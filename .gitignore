@@ -12,3 +12,6 @@ dist
 
 # uv env
 .venv
+
+# env
+.env

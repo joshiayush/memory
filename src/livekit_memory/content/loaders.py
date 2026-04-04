@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import List, Callable, Dict
+from typing import Callable, Dict, List
 
 from pypdf import PdfReader
 
+from ..utils.misc import classify_pdf_sync, get_pdf_page_to_image_map
 from .types import DocType
-
 
 _loader_registry: Dict[str, Callable] = dict()
 
@@ -83,9 +83,61 @@ def _read_pdf_sync(path: Path) -> str:
     Returns:
         Extracted text from all pages joined by newlines.
     """
-    reader = PdfReader(path)
-    pages = [page.extract_text() or "" for page in reader.pages]
-    return "\n".join(pages)
+    pdf_metadata = classify_pdf_sync(path=path)
+
+    if not pdf_metadata["has_text"] and not pdf_metadata["has_image"]:
+        raise ValueError(f"PDF has no extractable content: {path}")
+
+    if pdf_metadata["has_text"] and pdf_metadata["has_image"]:
+        reader = PdfReader(path)
+        page_to_image_map = get_pdf_page_to_image_map(path)
+        parts = []
+
+        for page_num, page in enumerate(reader.pages, start=1):
+            page_parts = []
+
+            if text := page.extract_text().strip():
+                page_parts.append(text)
+
+            # Image descriptions for this page (appended after text)
+            if page_num in page_to_image_map:
+                page_parts.append(
+                    "This page originally contained the following images in the order"
+                    " of their appearance."
+                )
+                for img in page_to_image_map[page_num]:
+                    page_parts.append(
+                        f"[Page: {page_num}, Image {img['img_index']} Description]\n"
+                        f"{img['description']}"
+                    )
+
+            if page_parts:
+                parts.append(f"── Page {page_num} ──\n" + "\n\n".join(page_parts))
+
+        return "\n\n".join(parts).strip()
+
+    elif pdf_metadata["has_image"]:
+        page_to_image_map = get_pdf_page_to_image_map(path)
+
+        if not page_to_image_map:
+            raise ValueError(f"PDF has images but none could be described: {path}")
+
+        parts = []
+        for page_num in sorted(page_to_image_map.keys()):
+            for img in page_to_image_map[page_num]:
+                parts.append(
+                    f"[Page: {page_num}, Image {img['img_index']} Description]\n"
+                    f"{img['description']}"
+                )
+        return "\n\n".join(parts)
+
+    elif pdf_metadata["has_text"]:
+        reader = PdfReader(path)
+        pages = [page.extract_text() or "" for page in reader.pages]
+        text = "\n\n".join(pages)
+        return text.strip()
+
+    return None
 
 
 @_register_loader("pdf")
