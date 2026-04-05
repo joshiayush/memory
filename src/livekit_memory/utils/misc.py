@@ -24,8 +24,7 @@ def classify_pdf_sync(path: Path) -> Dict[str, Any]:
 
             for page in pdf.pages:
                 if not has_text:
-                    text = page.extract_text() or ""
-                    if text.strip():
+                    if page.extract_text().strip():
                         has_text = True
 
                 if not has_image:
